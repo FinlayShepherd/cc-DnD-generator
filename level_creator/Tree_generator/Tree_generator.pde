@@ -4,7 +4,7 @@ void setup() {
 
 void draw() {
     // Mode = 0 | 1 | 2 (small, medium, large)
-    int mode = 2;
+    int mode = 1;
     int rooms = get_number_of_rooms(mode);
     System.out.println("Room number: "+ rooms);
 
@@ -19,6 +19,7 @@ void draw() {
 void draw_lines(int lower_x, int upper_x, int lower_y, int upper_y, tree_node tree) {
     if (tree.is_room) {
         //Do nothing
+        draw_room(lower_x, lower_y, upper_x, upper_y);
     }
     else {  
         // Draw line, split coords on line and rec call fun with left and right subtree
@@ -38,6 +39,16 @@ void draw_lines(int lower_x, int upper_x, int lower_y, int upper_y, tree_node tr
             draw_lines(x_line, upper_x, lower_y, upper_y, tree.right);
         }
     }
+}
+
+void draw_room(int x1, int y1, int x2, int y2) {
+    int x_dif = x2 - x1;
+    int y_dif = y2 - y1;
+    float rect_x1 = random(x1, x1+(x_dif/2));
+    float rect_x2 = random(x1+(x_dif/2), x2);
+    float rect_y1 = random(y1, y1+(y_dif/2));
+    float rect_y2 = random(y1+(y_dif/2), y2);
+    rect(rect_x1, rect_y1, rect_x2-rect_x1, rect_y2-rect_y1);
 }
 
 class tree_node {  
