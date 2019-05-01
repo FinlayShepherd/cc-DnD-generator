@@ -7,6 +7,8 @@ import java.io.FileReader;
 
 public class theme_selector {
 
+    // Depth weight indicates the value of each word dependent on the depth its found at, words found earlier are worth more
+    static int [] depth_weight = {100, 25, 1};
     static ArrayList<String> beast_theme = read_file("Synonyms/Beast.txt");
     static ArrayList<String> bandit_theme = read_file("Synonyms/Bandit.txt");
     static ArrayList<String> dragon_theme = read_file("Synonyms/Dragon.txt");
@@ -20,40 +22,33 @@ public class theme_selector {
     static wordnet net = new wordnet();
 
     public static void main (String [] args) {
-    //     ArrayList<String> beast_theme = read_file("Synonyms/Beast.txt");
-    //     ArrayList<String> bandit_theme = read_file("Synonyms/Bandit.txt");
-    //     ArrayList<String> dragon_theme = read_file("Synonyms/Dragon.txt");
-    //     ArrayList<String> enviromental_theme = read_file("Synonyms/Enviromental.txt");
-    //     ArrayList<String> military_theme = read_file("Synonyms/Military.txt");
-    //     ArrayList<String> pirate_theme = read_file("Synonyms/Pirate.txt");
-    //     ArrayList<String> religion_theme = read_file("Synonyms/Religion.txt");
-    //     ArrayList<String> undead_theme = read_file("Synonyms/Undead.txt");
         initialise_map();
-        read_headline("clean car target needs to be sooner");
+        read_headline("man pours acid on himself in court");
         System.out.println("Final result: "+theme_weight);
     }
 
     private static void read_headline(String headline) {
         String [] headline_words = headline.split(" ");
+        int depth = 0;
         for (String w: headline_words) {
-            check_word(w);
+            check_word(w, depth);
             System.out.println("Checking word: "+w+", result: "+theme_weight);
             ArrayList<String> synonyms = net.get_synonyms(w);
-            rec_check_synonyms(synonyms, 1);
+            rec_check_synonyms(synonyms, depth+1);
         }
     }
 
     private static void rec_check_synonyms(ArrayList<String> synonyms, int depth){
         if (depth == 2) {
             for (String w: synonyms) {
-                check_word(w);
+                check_word(w, depth);
                 // System.out.println(depth);
             }
             //end
         }
         else {
             for (String w: synonyms) {
-                check_word(w);
+                check_word(w, depth);
                 // System.out.println(depth);
                 // System.out.println("Based on word: "+w+ ", I have decided on the themes: "+theme_weight);
                 ArrayList<String> s = net.get_synonyms(w);
@@ -63,38 +58,38 @@ public class theme_selector {
     }
 
 
-    private static void check_word(String word){
+    private static void check_word(String word, int depth){
         if (beast_theme.contains(word)) {
             int x = theme_weight.get("Beast");
-            theme_weight.put("Beast", x+1);
+            theme_weight.put("Beast", x+depth_weight[depth]);
         }
         if (bandit_theme.contains(word)) {
             int x = theme_weight.get("Bandit");
-            theme_weight.put("Bandit", x+1);
+            theme_weight.put("Bandit", x+depth_weight[depth]);
         }
         if (dragon_theme.contains(word)) {
             int x = theme_weight.get("Dragon");
-            theme_weight.put("Dragon", x+1);
+            theme_weight.put("Dragon", x+depth_weight[depth]);
         }
         if (enviromental_theme.contains(word)) {
             int x = theme_weight.get("Enviromental");
-            theme_weight.put("Enviromental", x+1);
+            theme_weight.put("Enviromental", x+depth_weight[depth]);
         }
         if (military_theme.contains(word)) {
             int x = theme_weight.get("Military");
-            theme_weight.put("Military", x+1);
+            theme_weight.put("Military", x+depth_weight[depth]);
         }
         if (pirate_theme.contains(word)) {
             int x = theme_weight.get("Pirate");
-            theme_weight.put("Pirate", x+1);
+            theme_weight.put("Pirate", x+depth_weight[depth]);
         }
         if (religion_theme.contains(word)) {
             int x = theme_weight.get("Religion");
-            theme_weight.put("Religion", x+1);
+            theme_weight.put("Religion", x+depth_weight[depth]);
         }
         if (undead_theme.contains(word)) {
             int x = theme_weight.get("Undead");
-            theme_weight.put("Undead", x+1);            
+            theme_weight.put("Undead", x+depth_weight[depth]);
         }
     }
 
