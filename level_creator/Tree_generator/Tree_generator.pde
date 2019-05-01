@@ -4,12 +4,9 @@ void setup() {
 
 void draw() {
     // Mode = 0 | 1 | 2 (small, medium, large)
-    int mode = 0;
+    int mode = 2;
     int rooms = get_number_of_rooms(mode);
     System.out.println("Room number: "+ rooms);
-
-    //int total_nodes = rooms + (rooms - 1);
-    //System.out.println("Total nodes: "+ total_nodes);
 
     tree_node tree = rec_gen_tree(rooms);
     draw_rooms(0, 1000, 0, 800, tree);
@@ -28,16 +25,18 @@ void draw_rooms(int lower_x, int upper_x, int lower_y, int upper_y, tree_node tr
         if (line_direction.equals("horizontal")) {
             // Draw horizontal line along x axis, y axis stays the same
             int y_line = lower_y + (upper_y - lower_y)/2;
-            tree.set_line_coordinates(lower_x + (upper_x - lower_x)/2 , y_line);
-            line(float(lower_x), float(y_line), float(upper_x), float(y_line));
+            tree.set_line_coordinates(y_line);
+            tree.set_line_type(line_direction);
+            //line(float(lower_x), float(y_line), float(upper_x), float(y_line));
             draw_rooms(lower_x, upper_x, lower_y, y_line, tree.left);
             draw_rooms(lower_x, upper_x, y_line, upper_y, tree.right);
         }
         else {
             // Draw vertical line along y axis, x axis stays the same
             int x_line = lower_x + (upper_x - lower_x)/2;
-            tree.set_line_coordinates(lower_y + (upper_y - lower_y)/2 , x_line);
-            line(float(x_line), float(lower_y), float(x_line), float(upper_y));
+            tree.set_line_coordinates(x_line);
+            tree.set_line_type(line_direction);
+            //line(float(x_line), float(lower_y), float(x_line), float(upper_y));
             draw_rooms(lower_x, x_line, lower_y, upper_y, tree.left);
             draw_rooms(x_line, upper_x, lower_y, upper_y, tree.right);
         }
@@ -49,13 +48,70 @@ void draw_connectors(tree_node tree) {
           //Nothing to be done 
       }
       else {
-          float [] tree_line_coords = tree.get_line_coordinates();
-          tree_node left_room = get_closest_room(tree.left, tree_line_coords[0], tree_line_coords[1]);
-          tree_node right_room = get_closest_room(tree.right, tree_line_coords[0], tree_line_coords[1]);
-          draw_corridor(left_room, right_room);
-          draw_connectors(tree.left);
-          draw_connectors(tree.right);
+          float tree_line_coord = tree.get_line_coordinate();
+          if (tree.get_line_type().equals("horizontal")) {
+              tree_node left_room = get_closest_y_room(tree.left, tree_line_coord);
+              tree_node right_room = get_closest_y_room(tree.right, tree_line_coord);
+              draw_corridor(left_room, right_room);
+              draw_connectors(tree.left);
+              draw_connectors(tree.right);  
+          }
+          else { //vertical
+              tree_node left_room = get_closest_x_room(tree.left, tree_line_coord);
+              tree_node right_room = get_closest_x_room(tree.right, tree_line_coord);
+              draw_corridor(left_room, right_room);
+              draw_connectors(tree.left);
+              draw_connectors(tree.right);  
+          }
       }
+}
+
+tree_node get_closest_y_room(tree_node subtree, float y_coord) {
+    if (subtree.is_room){
+        return subtree;
+    }
+    else {
+        tree_node left_room = get_closest_y_room(subtree.left, y_coord);
+        tree_node right_room = get_closest_y_room(subtree.right, y_coord);
+        return compare_y_distance(left_room, right_room, y_coord);
+    }
+}
+
+tree_node get_closest_x_room(tree_node subtree, float x_coord) {
+    if (subtree.is_room){
+        return subtree;
+    }
+    else {
+        tree_node left_room = get_closest_x_room(subtree.left, x_coord);
+        tree_node right_room = get_closest_x_room(subtree.right, x_coord);
+        return compare_x_distance(left_room, right_room, x_coord);
+    }
+}
+
+tree_node compare_y_distance(tree_node room1, tree_node room2, float y_coord){
+    float [] room1_coords = room1.get_room_coordinates();
+    float [] room2_coords = room2.get_room_coordinates();
+    float room1_distance = get_closest_distance_y(room1_coords, y_coord);
+    float room2_distance = get_closest_distance_y(room2_coords, y_coord);
+    if (room1_distance < room2_distance){
+        return room1;
+    }
+    else {
+        return room2; 
+    }   
+}
+
+tree_node compare_x_distance(tree_node room1, tree_node room2, float x_coord){
+    float [] room1_coords = room1.get_room_coordinates();
+    float [] room2_coords = room2.get_room_coordinates();
+    float room1_distance = get_closest_distance_x(room1_coords, x_coord);
+    float room2_distance = get_closest_distance_x(room2_coords, x_coord);
+    if (room1_distance < room2_distance){
+        return room1;
+    }
+    else {
+        return room2; 
+    }   
 }
 
 void draw_corridor(tree_node left_room, tree_node right_room) {
@@ -65,31 +121,220 @@ void draw_corridor(tree_node left_room, tree_node right_room) {
     float left_y = left_room_coords[2] + (left_room_coords[3]-left_room_coords[2])/2;
     float right_x = right_room_coords[0] + (right_room_coords[1]-right_room_coords[0])/2;
     float right_y = right_room_coords[2] + (right_room_coords[3]-right_room_coords[2])/2;
-    line(left_x, left_y, right_x, right_y);
-}
-
-tree_node get_closest_room(tree_node subtree, float x_coord, float y_coord) {
-    if (subtree.is_room){
-        return subtree;
+    
+    if (left_room_coords[0] <= right_room_coords[0] && right_room_coords[0] <= left_room_coords[1]) {
+        if (right_room_coords[1] > left_room_coords[1]) {
+            float x_line_left = random(right_room_coords[0], left_room_coords[1]-10);
+            float y_line_left_1 = left_room_coords[3];
+            float y_line_left_2 = right_room_coords[2];
+            line(x_line_left, y_line_left_1, x_line_left, y_line_left_2);
+            line(x_line_left+10, y_line_left_1, x_line_left+10, y_line_left_2);
+        }
+        else {
+            float x_line_left = random(right_room_coords[0], right_room_coords[1]-10);
+            float y_line_left_1 = left_room_coords[3];
+            float y_line_left_2 = right_room_coords[2];
+            line(x_line_left, y_line_left_1, x_line_left, y_line_left_2);
+            line(x_line_left+10, y_line_left_1, x_line_left+10, y_line_left_2);    
+        }
     }
+    else if (left_room_coords[0] <= right_room_coords[1] && right_room_coords[1] <= left_room_coords[1]) {
+        if(right_room_coords[0] > left_room_coords[0]) {
+            float x_line_left = random(right_room_coords[0], right_room_coords[1]-10);
+            float y_line_left_1 = left_room_coords[3];
+            float y_line_left_2 = right_room_coords[2];
+            line(x_line_left, y_line_left_1, x_line_left, y_line_left_2);
+            line(x_line_left+10, y_line_left_1, x_line_left+10, y_line_left_2);
+        }
+        else {
+            float x_line_left = random(left_room_coords[0], right_room_coords[1]-10);
+            float y_line_left_1 = left_room_coords[3];
+            float y_line_left_2 = right_room_coords[2];
+            line(x_line_left, y_line_left_1, x_line_left, y_line_left_2);
+            line(x_line_left+10, y_line_left_1, x_line_left+10, y_line_left_2);  
+        }
+    }
+    //divide
+    else if (right_room_coords[0] <= left_room_coords[0] && left_room_coords[0] <= right_room_coords[1]) {
+        if (left_room_coords[1] > right_room_coords[1]) {
+            float x_line_left = random(left_room_coords[0], right_room_coords[1]-10);
+            float y_line_left_1 = right_room_coords[2];
+            float y_line_left_2 = left_room_coords[3];
+            line(x_line_left, y_line_left_1, x_line_left, y_line_left_2);
+            line(x_line_left+10, y_line_left_1, x_line_left+10, y_line_left_2);
+        }
+        else {
+            float x_line_left = random(left_room_coords[0], left_room_coords[1]-10);
+            float y_line_left_1 = right_room_coords[2];
+            float y_line_left_2 = left_room_coords[3];
+            line(x_line_left, y_line_left_1, x_line_left, y_line_left_2);
+            line(x_line_left+10, y_line_left_1, x_line_left+10, y_line_left_2);    
+        }
+    }
+    else if (right_room_coords[0] <= left_room_coords[1] && left_room_coords[1] <= right_room_coords[1]) {
+        if(left_room_coords[0] > right_room_coords[0]) {
+            float x_line_left = random(left_room_coords[0], left_room_coords[1]-10);
+            float y_line_left_1 = right_room_coords[2];
+            float y_line_left_2 = left_room_coords[3];
+            line(x_line_left, y_line_left_1, x_line_left, y_line_left_2);
+            line(x_line_left+10, y_line_left_1, x_line_left+10, y_line_left_2);
+        }
+        else {
+            float x_line_left = random(right_room_coords[0], left_room_coords[1]-10);
+            float y_line_left_1 = right_room_coords[2];
+            float y_line_left_2 = left_room_coords[3];
+            line(x_line_left, y_line_left_1, x_line_left, y_line_left_2);
+            line(x_line_left+10, y_line_left_1, x_line_left+10, y_line_left_2);  
+        }
+    }
+    //divide
+    else if (left_room_coords[2] <= right_room_coords[2] && right_room_coords[2] <= left_room_coords[3]) {
+        if (right_room_coords[3] > left_room_coords[3]) {
+            float y_line_left = random(right_room_coords[2], left_room_coords[3]-10);
+            float x_line_left_1 = left_room_coords[1];
+            float x_line_left_2 = right_room_coords[0];
+            line(x_line_left_1, y_line_left, x_line_left_2, y_line_left);
+            line(x_line_left_1, y_line_left+10, x_line_left_2, y_line_left+10);
+        }
+        else {
+            float y_line_left = random(right_room_coords[2], right_room_coords[3]-10);
+            float x_line_left_1 = left_room_coords[1];
+            float x_line_left_2 = right_room_coords[0];
+            line(x_line_left_1, y_line_left, x_line_left_2, y_line_left);
+            line(x_line_left_1, y_line_left+10, x_line_left_2, y_line_left+10);    
+        }  
+    }
+    else if (left_room_coords[2] <= right_room_coords[3] && right_room_coords[3] <= left_room_coords[3]) {
+        if (right_room_coords[2] > left_room_coords[2]) {
+            float y_line_left = random(right_room_coords[2], right_room_coords[3]-10);
+            float x_line_left_1 = left_room_coords[1];
+            float x_line_left_2 = right_room_coords[0];
+            line(x_line_left_1, y_line_left, x_line_left_2, y_line_left);
+            line(x_line_left_1, y_line_left+10, x_line_left_2, y_line_left+10);
+        }
+        else {
+            float y_line_left = random(left_room_coords[2], right_room_coords[3]-10);
+            float x_line_left_1 = left_room_coords[1];
+            float x_line_left_2 = right_room_coords[0];
+            line(x_line_left_1, y_line_left, x_line_left_2, y_line_left);
+            line(x_line_left_1, y_line_left+10, x_line_left_2, y_line_left+10);    
+        }  
+    }
+    //divide
+    else if (right_room_coords[2] <= left_room_coords[2] && left_room_coords[2] <= right_room_coords[3]) {
+        if (left_room_coords[3] > right_room_coords[3]) {
+            float y_line_left = random(left_room_coords[2], right_room_coords[3]-10);
+            float x_line_left_1 = right_room_coords[0];
+            float x_line_left_2 = left_room_coords[1];
+            line(x_line_left_1, y_line_left, x_line_left_2, y_line_left);
+            line(x_line_left_1, y_line_left+10, x_line_left_2, y_line_left+10);
+        }
+        else {
+            float y_line_left = random(left_room_coords[2], left_room_coords[3]-10);
+            float x_line_left_1 = right_room_coords[0];
+            float x_line_left_2 = left_room_coords[1];
+            line(x_line_left_1, y_line_left, x_line_left_2, y_line_left);
+            line(x_line_left_1, y_line_left+10, x_line_left_2, y_line_left+10);    
+        }  
+    }
+    else if (right_room_coords[2] <= left_room_coords[3] && left_room_coords[3] <= right_room_coords[3]) {
+        if (left_room_coords[2] > right_room_coords[2]) {
+            float y_line_left = random(left_room_coords[2], left_room_coords[3]-10);
+            float x_line_left_1 = right_room_coords[0];
+            float x_line_left_2 = left_room_coords[1];
+            line(x_line_left_1, y_line_left, x_line_left_2, y_line_left);
+            line(x_line_left_1, y_line_left+10, x_line_left_2, y_line_left+10);
+        }
+        else {
+            float y_line_left = random(left_room_coords[2], right_room_coords[3]-10);
+            float x_line_left_1 = right_room_coords[0];
+            float x_line_left_2 = left_room_coords[1];
+            line(x_line_left_1, y_line_left, x_line_left_2, y_line_left);
+            line(x_line_left_1, y_line_left+10, x_line_left_2, y_line_left+10);    
+        }  
+    }
+    // divide, this should do diagonals
     else {
-        tree_node left_room = get_closest_room(subtree.left, x_coord, y_coord);
-        tree_node right_room = get_closest_room(subtree.right, x_coord, y_coord);
-        return compare_distance(left_room, right_room, x_coord, y_coord);
+        float min_dist = 10000;
+        float room1_closest_x = 0;
+        float room1_closest_y = 0;
+        float room2_closest_x = 0;
+        float room2_closest_y = 0;
+        for (float f: left_room_coords) {
+            System.out.println(f); 
+        }
+        for (float f: right_room_coords) {
+            System.out.println(f); 
+        }
+        for (int x = 0; x<2; x++) {
+            if(abs(left_room_coords[0] - right_room_coords[x]) < min_dist) {
+                min_dist = abs(left_room_coords[0] - right_room_coords[x]);
+                room1_closest_x = left_room_coords[0];
+                room2_closest_x = right_room_coords[x];
+            }
+            if(abs(left_room_coords[1] - right_room_coords[x]) < min_dist) {
+                min_dist = abs(left_room_coords[1] - right_room_coords[x]);
+                room1_closest_x = left_room_coords[1];
+                room2_closest_x = right_room_coords[x];
+            }
+        }
+        min_dist = 10000;
+        for (int y = 2; y<4; y++) {
+            if(abs(left_room_coords[2] - right_room_coords[y]) < min_dist) {
+                min_dist = abs(left_room_coords[2] - right_room_coords[y]);    
+                room1_closest_y = left_room_coords[2];
+                room2_closest_y = right_room_coords[y];
+            }
+            if(abs(left_room_coords[3] - right_room_coords[y]) < min_dist) {
+                min_dist = abs(left_room_coords[3] - right_room_coords[y]);    
+                room1_closest_y = left_room_coords[3];
+                room2_closest_y = right_room_coords[y];
+            }
+        }
+        System.out.println(room1_closest_x+", "+room1_closest_y+", "+room2_closest_x+", "+room2_closest_y);
+        line(room1_closest_x,room1_closest_y, room2_closest_x, room2_closest_y);
+        //Decide where to place corridor, select x or y randomly and then take half the length of that side and random between it
+        String room1_pos = horizontal_or_vertical();
+        String room2_pos = horizontal_or_vertical();
+        if (room1_pos.equals("vertical")) { //put on y axis
+            if (room1_closest_y > left_room_coords[2]) {
+                if (room2_closest_x > right_room_coords[0]) {
+                    line(room1_closest_x, room1_closest_y-10, room2_closest_x-10, room2_closest_y);
+                }
+                else {
+                    line(room1_closest_x, room1_closest_y-10, room2_closest_x+10, room2_closest_y);
+                }
+            }
+            else {
+                if(room2_closest_x > right_room_coords[0]) {
+                    line(room1_closest_x, room1_closest_y+10, room2_closest_x-10, room2_closest_y);  
+                }
+                else {
+                    line(room1_closest_x, room1_closest_y+10, room2_closest_x+10, room2_closest_y);   
+                }
+            }
+        }
+        else { // put on x axis
+            if (room1_closest_x > left_room_coords[0]) {
+                if (room2_closest_y > right_room_coords[2]) {
+                    line(room1_closest_x-10, room1_closest_y, room2_closest_x, room2_closest_y-10);
+                }
+                else {
+                    line(room1_closest_x-10, room1_closest_y, room2_closest_x, room2_closest_y+10);
+                }
+            }
+            else {
+                if(room2_closest_y > right_room_coords[2]) {
+                    line(room1_closest_x+10, room1_closest_y, room2_closest_x, room2_closest_y-10);  
+                }
+                else {
+                    line(room1_closest_x+10, room1_closest_y, room2_closest_x, room2_closest_y+10);   
+                }
+            }  
+        }
+        //line();
     }
-}
-
-tree_node compare_distance(tree_node room1, tree_node room2, float x_coord, float y_coord){
-    float [] room1_coords = room1.get_room_coordinates();
-    float [] room2_coords = room2.get_room_coordinates();
-    float room1_distance = get_closest_distance_x(room1_coords, x_coord) + get_closest_distance_y(room1_coords, y_coord);
-    float room2_distance = get_closest_distance_x(room2_coords, x_coord) + get_closest_distance_y(room2_coords, y_coord);
-    if (room1_distance < room2_distance){
-        return room1;
-    }
-    else {
-        return room2; 
-    }   
+    //line(left_x, left_y, right_x, right_y);
 }
 
 float get_closest_distance_x(float [] room_coords, float coordinate){
@@ -127,8 +372,9 @@ class tree_node {
    tree_node left;
    tree_node right;
    tree_node parent;
+   String line_type;
    float [] room_coordinates = new float[4];
-   float [] line_coordinates = new float [2];
+   float line_coordinate;
    boolean is_room;
    
    tree_node(tree_node left_node, tree_node right_node, tree_node parent_node, boolean room){
@@ -149,13 +395,20 @@ class tree_node {
        return room_coordinates; 
    }
    
-   void set_line_coordinates(float x1,float y1){
-       line_coordinates[0] = x1;
-       line_coordinates[1] = y1;
+   void set_line_coordinates(float coord){
+       line_coordinate = coord;
    }
    
-   float [] get_line_coordinates(){
-       return line_coordinates; 
+   float get_line_coordinate(){
+       return line_coordinate; 
+   }
+   
+   void set_line_type(String s){
+       line_type = s;  
+   }
+   
+   String get_line_type(){
+       return line_type; 
    }
 }
 
