@@ -20,7 +20,6 @@ void draw() {
     tree_node tree = rec_gen_tree(rooms);
     draw_rooms(0, 1000, 0, 800, tree);
     draw_connectors(tree);
-    System.out.println(room_map);
     allocate_rooms(theme);
     
     noLoop();
@@ -34,7 +33,7 @@ void allocate_rooms(String theme) {
     //Get monster functions
     
     for (int room = 1; room<room_number+1; room++) {
-        System.out.println("Checking room: "+room+", neighbours size: "+((room_map.get(room)).get_neighbours()).size());
+        //System.out.println("Checking room: "+room+", neighbours size: "+((room_map.get(room)).get_neighbours()).size());
         if (((room_map.get(room)).get_neighbours()).size() == 1) {
             single_neighbour_rooms.add(room_map.get(room));  
         }
