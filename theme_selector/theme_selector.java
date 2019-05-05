@@ -23,7 +23,7 @@ public class theme_selector {
 
     public static void main (String [] args) {
         initialise_map();
-        read_headline("man pours acid on himself in court");
+        read_headline("clean car target needs to be hit sooner");
         System.out.println("Final result: "+theme_weight);
     }
 
@@ -32,9 +32,9 @@ public class theme_selector {
         int depth = 0;
         for (String w: headline_words) {
             check_word(w, depth);
-            System.out.println("Checking word: "+w+", result: "+theme_weight);
             ArrayList<String> synonyms = net.get_synonyms(w);
             rec_check_synonyms(synonyms, depth+1);
+            System.out.println("Checking word: "+w+", result: "+theme_weight);
         }
     }
 
